@@ -1,0 +1,40 @@
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+COPY . .
+
+RUN ./mvnw package -DskipTests
+
+EXPOSE 8080
+
+CMD ["java","-jar","target/*.jar"]
+
+#stage 1 build stage
+FROM maven:3.8.5-openjdk-17-slim As build
+WORKDIR /app
+COPY . .
+RUN ./mvnw package -DskipTests
+
+#stage2 Runtime stage
+FROM openjdk:17-jdk-slim as runtime
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+
+EXPOSE 8080
+CMD ["java","-jar","app.jar"]
+
+
+#stage 1 build stage
+FROM maven:3.8.5-openjdk-17-slim As build
+WORKDIR /app
+COPY . .
+RUN ./mvnw package -DskipTests
+
+#stage2 Runtime stage
+FROM openjdk:11-jre-slim as runtime
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+
+EXPOSE 8080
+CMD ["java","-jar","app.jar"]
